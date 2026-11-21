@@ -213,7 +213,7 @@ function side() {
 }
 function head(k) {
   var f = find(k), title = f[1] ? f[1][1] : f[0].t;
-  var cr = f[1] ? esc(f[0].t) + ic('cv') + '<b>' + esc(title) + '</b>' : '<b>' + esc(title) + '</b>';
+  var cr = f[1] ? esc(f[0].t) + ic('cv') + '<b>' + esc(title) + '</b>' : (k === 'today' ? dShort(TODAY) : '&nbsp;');
   return '<div class="crumb">' + cr + '</div><h1 class="pt">' + esc(title) + '</h1><p class="desc">' + (DESC[k] || '') + '</p>';
 }
 function go(k, keepScroll) {
@@ -347,7 +347,7 @@ V.today = function () {
   var kcal = food.reduce(function (s, p) { return s + kcalOf(p.memo); }, 0);
   var todos = (D.todos || []).filter(function (t) { return !t.done && t.kind !== '메모' && t.due && t.due <= TODAY; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; });
   var memos = (D.memos || []).slice(0, 4);
-  var h = '<div class="crumb" style="margin:-12px 0 12px">' + dShort(TODAY) + '</div><div class="grid3 kp3">' +
+  var h = '<div class="grid3 kp3">' +
     '<div class="box kpi ex"><span>오늘 쓴 돈</span><b>' + won(todayE) + '</b><em>세 가계부 합계</em></div>' +
     '<div class="box kpi ex"><span>' + m + '월 지출</span><b>' + won(monE) + '</b><em>땡깡</em></div>' +
     '<div class="box kpi in"><span>' + m + '월 수입</span><b>' + won(monI) + '</b><em>땡깡</em></div></div>';
@@ -377,7 +377,8 @@ var LINKS = {
 };
 function links(k) {
   return '<div class="grid">' + LINKS[k].map(function (a) {
-    var im = a[3] ? '<img src="' + GH + a[3] + '" alt="" loading="lazy">' : '<span class="ai" style="background:var(--p2);color:var(--green)">' + ic(k === 'l-game' ? 'game' : 'link') + '</span>';
+    var fb = '<span class="ai" style="background:var(--p2);color:var(--green)">' + ic(k === 'l-game' ? 'game' : 'link') + '</span>';
+    var im = a[3] ? '<img src="' + GH + a[3] + '" alt="" loading="lazy" onerror="this.outerHTML=this.dataset.fb" data-fb="' + esc(fb) + '">' : fb;
     return '<a class="app-c" href="' + GH + a[0] + '/" target="_blank" rel="noopener">' + im + '<span class="tx"><b>' + esc(a[1]) + '</b><span>' + esc(a[2]) + '</span></span>' + ic('out') + '</a>';
   }).join('') + '</div>';
 }
