@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="icon-192.png?v=20261122a">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261122a">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="study/study.css?v=20261127a">
 <style>
 /* hyonanest (2026-11-22): 실장님 개인 생활 비서실. PLYSH와 같은 규칙 — 왼쪽 메뉴(대 > 중), 가운데 고정 폭, 모바일은 서랍 */
 :root {
@@ -150,6 +151,7 @@ iframe.fmon { position:relative; z-index:2000 !important; }
   </div></main>
 </div>
 
+<script src="study/study.js?v=20261127a"></script>
 <script>
 var OWNER = 'iamhyona@gmail.com';
 var GCID = '796915285398-n9gvmtacfb6schg9je2bknmlkgt4jkao.apps.googleusercontent.com';
@@ -176,6 +178,7 @@ var IC = {
   wallet: '<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   cv: '<path d="M9 6l6 6-6 6"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4M9 7h6"/>',
   out: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   logout: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h10"/>',
   bowl: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7c0-1 1-2 1-3M13 7c0-1 1-2 1-3"/>',
@@ -190,10 +193,12 @@ var MENU = [
   { k: 'today', t: '오늘', ic: 'home' },
   { k: 'rec', t: '기록', ic: 'note', items: [['memo', '메모'], ['food', '식단'], ['health', '건강']] },
   { k: 'money', t: '가계부', ic: 'wallet', items: [['b-hyuna', '땡깡'], ['b-share', '공용'], ['b-pitch', '핏치']] },
+  { k: 'study', t: '공부', ic: 'book', items: STUDY.cats.map(function (c) { return [c.k, c.t]; }) },
   { k: 'links', t: '링크 모음', ic: 'link', items: [['l-work', '업무'], ['l-life', '생활'], ['l-game', '게임']] }
 ];
 var DESC = { today: '오늘 할 일 · 쓴 돈 · 식단을 한눈에', memo: '할 일과 메모 · 음성으로 받아쓰기', food: '끼니별 사진과 칼로리', health: '처방 · 검사 수치 · 약',
   'b-hyuna': '내 수입 · 지출', 'b-share': '같이 쓰는 돈', 'b-pitch': '핏치 회사 지출', 'l-work': '업무용 웹앱 바로가기', 'l-life': '따로 쓰는 생활 앱', 'l-game': '만든 게임 모음' };
+STUDY.cats.forEach(function (c) { DESC[c.k] = c.d; });
 var FRAME = { memo: ['routine', 'memo'], food: ['routine', 'food'], health: ['routine', 'medical'], 'b-hyuna': ['money', 'hyuna'], 'b-share': ['money', 'share'], 'b-pitch': ['money', 'pitch'] };
 function find(k) { for (var i = 0; i < MENU.length; i++) { var m = MENU[i]; if (m.k === k) return [m, null]; if (m.items) for (var j = 0; j < m.items.length; j++) if (m.items[j][0] === k) return [m, m.items[j]]; } return null; }
 var cur = 'today', openG = {};
@@ -228,7 +233,7 @@ function render() {
   var fr = FRAME[cur];
   $('#view').classList.toggle('hide', !!fr); $('#fw').classList.toggle('hide', !fr);
   if (fr) { showFrame(fr[0], fr[1]); $('#view').innerHTML = ''; }
-  else { $$('#fw iframe').forEach(function (f) { f.classList.add('hide'); }); $('#view').innerHTML = (V[cur] || V.today)(); $$('#view [data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; }); }
+  else { $$('#fw iframe').forEach(function (f) { f.classList.add('hide'); }); $('#view').onclick = null; $('#view').onchange = null; $('#view').innerHTML = (V[cur] || V.today)(); if (/^s-/.test(cur)) studyBind(); $$('#view [data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; }); }
 }
 
 /* ───── 루틴·가계부: 앱마다 iframe 하나, 메뉴를 바꿔도 입력 유지 ───── */
@@ -385,6 +390,13 @@ function links(k) {
 V['l-work'] = function () { return links('l-work'); };
 V['l-life'] = function () { return links('l-life'); };
 V['l-game'] = function () { return links('l-game'); };
+
+/* ───── 공부 (UI·UX · 차트 용어) ───── */
+STUDY.cats.forEach(function (c) { V[c.k] = function () { return c.k === 's-quiz' ? STUDY.quiz() : STUDY.page(c.k); }; });
+function studyBind() {
+  var v = $('#view');
+  STUDY.bind(v, function () { v.innerHTML = V[cur](); studyBind(); });
+}
 
 /* ───── 가계부 저장본 새로 받기 (오늘 화면용, 가계부 앱과 같은 저장 형식) ───── */
 function refreshMoney() {
